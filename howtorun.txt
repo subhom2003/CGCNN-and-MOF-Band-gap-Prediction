@@ -1,0 +1,23 @@
+# 0) one-time
+bash setup.sh
+source .venv/bin/activate
+
+# 1) place your data
+cp /path/to/qmof.csv   data/raw/
+cp /path/to/*.cif      data/raw/cifs/
+
+# 2) optional: edit configs/default.json to change hyperparameters
+#    or override via CLI: python -m src.train --lr 0.01 --epochs 10
+
+# 2) recommended: dry run first (~minutes, small train subset)
+bash run_pipeline.sh --smoke_test true --epochs 5
+
+# 3) full run (~20k CIFs; graphs build once in 5–15 min, training 1.5–4 h on GPU)
+bash run_pipeline.sh
+
+# skip slow extras / pass overrides
+SKIP_BASELINES=1 SKIP_INTERPRET=1 bash run_pipeline.sh
+bash run_pipeline.sh --cutoff 5.0 --batch_size 32 --use_energy false --seed 7
+
+# competition-style inference on an ID list afterwards
+python -m src.predict --ids_file data/raw/mapping.csv
